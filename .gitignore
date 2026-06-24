@@ -4,3 +4,5 @@ CMakeFiles/
 *.o
 *.exe
 .vscode/
+cpp-fundamentals-refresher/*
+!cpp-fundamentals-refresher/*.cpp
