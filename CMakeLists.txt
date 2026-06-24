@@ -8,6 +8,8 @@ project(tarsis-hmi-simulator)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 #===========================================
 # Block 2: Find Qt6 and required modules
 #===========================================
@@ -22,11 +24,13 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
+
+
 #=========================================================
 # Block 4: Define the executable and link Qt
 #=========================================================
 
-add_executable(tarsis-hmi-simulator src/main.cpp)
+add_executable(tarsis-hmi-simulator src/main.cpp src/mainwindow.cpp src/mainwindow.h)
 target_link_libraries(tarsis-hmi-simulator PRIVATE Qt6::Widgets)
 
 
