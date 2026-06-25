@@ -14,7 +14,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Block 2: Find Qt6 and required modules
 #===========================================
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Network)
 
 #=========================================================
 # Block 3: Enable Qt's meta-object compiler (moc, uic,rcc)
@@ -31,7 +31,7 @@ set(CMAKE_AUTORCC ON)
 #=========================================================
 
 add_executable(tarsis-hmi-simulator src/main.cpp src/mainwindow.cpp src/mainwindow.h)
-target_link_libraries(tarsis-hmi-simulator PRIVATE Qt6::Widgets)
+target_link_libraries(tarsis-hmi-simulator PRIVATE Qt6::Widgets  Qt6::Network)
 
 
 

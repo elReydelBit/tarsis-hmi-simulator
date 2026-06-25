@@ -9,6 +9,8 @@
 #include <QWidget>
 #include <QLabel>
 #include <QPushButton>
+#include <QUdpSocket> // Include the QUdpSocket header for UDP communication
+#include <QHostAddress> // Include the QHostAddress header for handling IP 
 
 
 class MainWindow : public QWidget {
@@ -25,7 +27,19 @@ class MainWindow : public QWidget {
         QPushButton *button=nullptr;
         bool isUavOn=false;// Flag to track the current UAV status, toggled on each click
 
+        //Member fot UDP conection
+        QUdpSocket *udpSocket=nullptr; // Pointer to the UDP socket for sending messages
+
+
 
     private slots:
+        
+        //Slot function to handle button click events  
         void onButtonClicked();
+
+        
+        //Slot function to handle incoming UDP data 
+        void receiveUdpDatagram();  
+
+
 };

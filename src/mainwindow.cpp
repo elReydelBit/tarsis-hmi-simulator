@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include <QVBoxLayout>
+#include <QNetworkDatagram>// Include the QNetworkDatagram header for handling incoming UDP datagrams
 
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent){
 
@@ -22,8 +23,18 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent){
 
     this->isUavOn = false; // Initialize the UAV status flag to OFF
 
+
+    //Create a UDP socket for sending messages
+    this->udpSocket = new QUdpSocket(this);
+
+    // Bind the socket to any available address and port 5000
+    this->udpSocket->bind(QHostAddress::Any, 5000); 
+
     //Connect the button's clicked signal to the onButtonClicked slot
     QObject::connect(this->button, &QPushButton::clicked, this, &MainWindow::onButtonClicked);
+
+    //Connect the readyRead signal of the UDP socket to the receiveUdpDatagram slot
+    QObject::connect(this->udpSocket, &QUdpSocket::readyRead, this, &MainWindow::receiveUdpDatagram);
 
 
 
@@ -51,4 +62,22 @@ void MainWindow::onButtonClicked(){
 
 }
 
+void MainWindow::receiveUdpDatagram(){
+    
+    if (this->udpSocket->hasPendingDatagrams()){
+
+        //Read the incoming datagram
+        QNetworkDatagram datagram = this->udpSocket->receiveDatagram();
+    
+        //Extract the data from the datagram and covert it to a string
+        QByteArray payload = datagram.data();
+        QString receivedMessage = QString::fromUtf8(payload);
+
+        //Update the label with the received message
+        this->label->setText("Received UDP message: " + receivedMessage);
+
+
+    }
+
+}
 
