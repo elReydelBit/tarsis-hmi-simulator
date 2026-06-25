@@ -24,6 +24,12 @@ class MainWindow : public QWidget {
     
     private:
         QLabel *label=nullptr;
+
+        //Label telemetry data
+        QLabel *altitudeLabel=nullptr;
+        QLabel *speedLabel=nullptr;
+        QLabel *batteryLabel=nullptr;
+
         QPushButton *button=nullptr;
         bool isUavOn=false;// Flag to track the current UAV status, toggled on each click
 
