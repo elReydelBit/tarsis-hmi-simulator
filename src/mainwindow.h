@@ -31,7 +31,7 @@ class MainWindow : public QWidget {
         QLabel *speedLabel=nullptr;
         QLabel *batteryLabel=nullptr;
 
-        QPushButton *button=nullptr;
+        QPushButton *buttonReconnet=nullptr;
         bool isUavOn=false;// Flag to track the current UAV status, toggled on each click
 
 
@@ -49,21 +49,26 @@ class MainWindow : public QWidget {
 
     private slots:
         
-        //Slot function to handle button click events  
-        void onButtonClicked();
+        //Slot function triggered when the Reconnect button is clicked 
+        void onReconnectButtonClicked();
 
         
         //Slot function to handle incoming UDP data 
         void receiveUdpDatagram();  
 
 
-        //
+        // Slot function triggered when the RTL button is clicked
+        void onRtlButtonClicked();
+
+        //Slot function to act when the TCP sockect connect to host
         void onTcpConnected();
 
-        //
+        //Slot function when the Host sent info 
         void receiveTcpData();
 
-        //
-        void onRtlButtonClicked();
+        
+
+        //Slot function when the connect having problem
+        void onTcpError(QAbstractSocket :: SocketError socketError);
 
 };

@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent){
 
 
     //Create a button
-    this->button = new QPushButton("Click Me", this);
+    this->buttonReconnet = new QPushButton("Reconnect", this);
 
     //Create a RTL button
     this->buttonRtl= new QPushButton("RTL", this);
@@ -52,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent){
 
     
     //Generate the link to the button
-    Layout->addWidget(this->button);
+    Layout->addWidget(this->buttonReconnet);
 
 
 
@@ -68,14 +68,16 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent){
     //Create a TCP socket for sending messages
     this->tcpSocket = new QTcpSocket(this);
     
-    //
+    // Critical command channel: opened right away at startup,
+    // not on-demand, since RTL must always be ready to send.
+    tcpSocket->connectToHost(QHostAddress("192.168.1.131"), 6000);
 
 
 
 
 
-    //Connect the button's clicked signal to the onButtonClicked slot
-    QObject::connect(this->button, &QPushButton::clicked, this, &MainWindow::onButtonClicked);
+    //Connect the buttonReconnect's clicked signal to the onReconnectButtonClicked slot
+    QObject::connect(this->buttonReconnet, &QPushButton::clicked, this, &MainWindow::onReconnectButtonClicked);
 
     //Connect the RTL button's clicked signal to the onRtlButtonClicked
     QObject::connect(this->buttonRtl, &QPushButton::clicked, this, &MainWindow:: onRtlButtonClicked);
@@ -86,26 +88,22 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent){
     //Connect TCP socket signals to their slots
     QObject::connect(this->tcpSocket, &QTcpSocket::connected, this, &MainWindow::onTcpConnected);
     QObject::connect(this->tcpSocket, &QTcpSocket::readyRead, this, &MainWindow::receiveTcpData);
+    QObject::connect(this->tcpSocket, &QTcpSocket::errorOccurred, this, &MainWindow:: onTcpError);
 
 
 }
 
-void MainWindow::onButtonClicked(){
+void MainWindow::onReconnectButtonClicked(){
 
+    
+    if (this->tcpSocket->state() == QAbstractSocket:: UnconnectedState){
 
-    //Turn on or off the flag
-    this->isUavOn = !this->isUavOn;
-
-    //Update the text label based on the current UAV status
-    if(this->isUavOn){
-
-        this->label->setText("UAV status: ON");
-       
+        this->label->setText("Reconnecting...");
+        this->tcpSocket->connectToHost(QHostAddress("192.168.1.131"), 6000);
 
     }else{
-        
-        this->label->setText("UAV status: OFF");
-        
+
+        this->label->setText("Warning: TCP connected, it need not reconnect");
     }
 
 
@@ -186,31 +184,27 @@ void MainWindow::receiveUdpDatagram(){
 
 void MainWindow::onRtlButtonClicked(){
 
-    // Guard: only start a new connection if the socket is fully idle.
-    // Otherwise, ignore the extra click instead of colliding with
-    // a connection already in progress.
-    if (this->tcpSocket->state() != QAbstractSocket::UnconnectedState) {
-        return;
+    
+    if (this->tcpSocket->state() == QAbstractSocket::ConnectedState) {
+        
+        QByteArray commad = "RTL\n";
+        this->tcpSocket->write(commad);  
+        this->label->setText("RTL sent...");  
+    }else{
+        
+        //Warning if the TCP socket dont connect to Host
+        this->label->setText("Warming: TCP not connected");
+
     }
 
-
-
-    // THIS line is the connection itself — the actual "marcar el número".
-    // It does NOT connect instantly: it just tells the OS "start trying
-    // to reach this host:port", and returns immediately.
-    this->tcpSocket->connectToHost(QHostAddress::LocalHost, 6000);
+   
  
 }
 
 
 void MainWindow::onTcpConnected(){
-    // Qt calls THIS function for you, automatically, the moment the
-    // line above actually succeeds — you never call this yourself.
-    // By the time the code reaches inside here, the connection is
-    // already real, so it's now safe to send the command.
-    QByteArray commad = "RTL\n";
-    this->tcpSocket->write(commad);
     
+    this->label->setText("TCP connected!!!");
 
 }
 
@@ -228,6 +222,16 @@ void MainWindow::receiveTcpData(){
 
     //Test
     qDebug() << "TCP recieved: " << receivedMessage;
+}
+
+void MainWindow::onTcpError(QAbstractSocket :: SocketError socketError){
+
+
+        this->label->setText("TCP error: " + this->tcpSocket->errorString());
+
+        //Better version resolved with unique solution for each error
+
+
 }
 
 
