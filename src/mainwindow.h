@@ -11,6 +11,7 @@
 #include <QPushButton>
 #include <QUdpSocket> // Include the QUdpSocket header for UDP communication
 #include <QHostAddress> // Include the QHostAddress header for handling IP 
+#include <QTcpSocket> // Include the QTcpSocket header for TCP connection
 
 
 class MainWindow : public QWidget {
@@ -33,8 +34,16 @@ class MainWindow : public QWidget {
         QPushButton *button=nullptr;
         bool isUavOn=false;// Flag to track the current UAV status, toggled on each click
 
-        //Member fot UDP conection
+
+        //Button fot RTL order
+        QPushButton *buttonRtl=nullptr;
+
+
+        //Member fot UDP connection
         QUdpSocket *udpSocket=nullptr; // Pointer to the UDP socket for sending messages
+
+        //Member for TCP connection
+        QTcpSocket *tcpSocket= nullptr; //Pointer to the TCP socket 
 
 
 
@@ -47,5 +56,14 @@ class MainWindow : public QWidget {
         //Slot function to handle incoming UDP data 
         void receiveUdpDatagram();  
 
+
+        //
+        void onTcpConnected();
+
+        //
+        void receiveTcpData();
+
+        //
+        void onRtlButtonClicked();
 
 };
