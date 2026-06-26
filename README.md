@@ -11,7 +11,9 @@ Qt6/C++ HMI simulator for UAV telemetry — portfolio project built in preparati
 | Qt6 + CMake skeleton | ✅ Done |
 | `MainWindow` class (Q_OBJECT, signals & slots) | ✅ Done |
 | C++ modern fundamentals (RAII, smart pointers) | ✅ Done — see `cpp-fundamentals-refresher/` |
-| TCP/UDP/MQTT telemetry simulation | ⏳ Planned |
+| UDP telemetry reception & parsing | ✅ Done |
+| TCP critical command channel (RTL) | ✅ Done |
+| MQTT integration (Qt as client) | ⏳ Planned |
 | Logging & error handling | ⏳ Planned |
 | PECAL documentation review | ⏳ Planned |
 
