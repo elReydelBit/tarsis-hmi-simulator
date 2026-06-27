@@ -58,3 +58,7 @@ tarsis-hmi-simulator/
 │   └── mosquittomqttpublisher.cpp
 └── cpp-fundamentals-refresher/   # C++ onboarding exercises (RAII, smart pointers)
 ```
+
+## Test infrastructure
+
+UDP telemetry is generated on the test rig (Kali), not on the development machine, for realism. Since WSL2's default NAT networking blocks inbound connections from the LAN, `tools/start_telemetry_bridge.sh` opens an SSH reverse tunnel and a local TCP→UDP translator (socat) to bridge it through. TCP and MQTT don't need this, since those connections originate from the HMI itself.
