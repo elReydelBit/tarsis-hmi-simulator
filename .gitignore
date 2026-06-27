@@ -7,3 +7,4 @@ CMakeFiles/
 cpp-fundamentals-refresher/*
 !cpp-fundamentals-refresher/*.cpp
 LOCAL_TEST_SETUP.md
+logs/

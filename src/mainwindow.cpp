@@ -2,6 +2,7 @@
 #include <QVBoxLayout>
 #include <QNetworkDatagram>// Include the QNetworkDatagram header for handling incoming UDP datagrams
 #include <QHBoxLayout> //Allow to desing better IU 
+#include <spdlog/spdlog.h>
 
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent), mosqMqttPublisher("tarsis-hmi"){
 
@@ -178,6 +179,26 @@ void MainWindow::receiveUdpDatagram(){
         this->speedLabel->setText("Speed: "+ speedValue +" Km/h");
         this->batteryLabel->setText("Battery: "+ batteryValue +" %");
 
+        // Convert the battery percentage from text to a number, so we can
+        // compare it against the 10% critical threshold.
+        int batteryPercent = batteryValue.toInt();
+        
+        if(batteryPercent < 10){
+            // Battery critical: every single reading below threshold gets
+            // logged here, each line self-contained with the full snapshot -
+            // useful to reconstruct exactly how long the UAV was critical
+            // before the operator acted.
+            spdlog::warn("Battery critical: {}% - RTL required (alt: {} m, speed: {} Km/h)", 
+                          batteryPercent, altitudeValue.toStdString(), speedValue.toStdString(),
+                          speedValue.toStdString());
+
+
+        }else{
+
+             spdlog::info("Telemetry nominal - alt: {} m, speed: {} km/h, battery: {}%",
+                           altitudeValue.toStdString(), speedValue.toStdString(), batteryPercent);
+
+        }
 
     }
 
@@ -190,7 +211,12 @@ void MainWindow::onRtlButtonClicked(){
         
         QByteArray commad = "RTL\n";
         this->tcpSocket->write(commad);  
-        this->label->setText("RTL sent...");  
+        this->label->setText("RTL sent..."); 
+        // Operator's decision, logged once, at critical level - distinct
+        // from the repeated "battery low" warnings above it in alarms.log.
+        spdlog::critical("Operator executed RTL - {} ( {} , {})",
+                          this->batteryLabel->text().toStdString(), this->altitudeLabel->text().toStdString(), this->speedLabel->text().toStdString());
+        
     }else{
         
         //Warning if the TCP socket dont connect to Host

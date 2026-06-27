@@ -90,3 +90,18 @@ pkg_check_modules(MOSQUITTO REQUIRED libmosquitto)
 # This is the SAME target we already defined in Block 4.
 target_include_directories(tarsis-hmi-simulator PRIVATE ${MOSQUITTO_INCLUDE_DIRS})
 target_link_libraries(tarsis-hmi-simulator PRIVATE ${MOSQUITTO_LIBRARIES})
+
+#=========================================================
+# Block 6: Find and link spdlog (for logging)
+#=========================================================
+
+# spdlog already ships its own CMake configuration files
+# when installed via apt, so (unlike mosquitto in Block 5)
+# we don't need PkgConfig here - find_package alone is
+# enough, the same way Qt6 was found in Block 2.
+find_package(spdlog REQUIRED)
+
+# Now we tell our executable: "use spdlog".
+# Same target we already defined in Block 4.
+target_link_libraries(tarsis-hmi-simulator PRIVATE spdlog::spdlog)
+
