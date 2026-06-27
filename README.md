@@ -13,18 +13,31 @@ Qt6/C++ HMI simulator for UAV telemetry — portfolio project built in preparati
 | C++ modern fundamentals (RAII, smart pointers) | ✅ Done — see `cpp-fundamentals-refresher/` |
 | UDP telemetry reception & parsing | ✅ Done |
 | TCP critical command channel (RTL) | ✅ Done |
-| MQTT integration (Qt as client) | ⏳ Planned |
+| MQTT status publishing (ONLINE/OFFLINE) | ✅ Done |
+| DDS conceptual study | ⏳ Planned |
 | Logging & error handling | ⏳ Planned |
 | PECAL documentation review | ⏳ Planned |
 
 ## Tech stack
 
 - C++17
-- Qt6 (Widgets)
-- CMake
+- Qt6 (Widgets, Network)
+- libmosquitto (C client) — wrapped in a custom RAII C++ class, not Qt's own MQTT module
+- CMake + pkg-config
 - Git / GitHub
 
+## MQTT design note
+
+The HMI publishes its lifecycle status (`ONLINE` on startup, `OFFLINE` on window close) to topic `tarsis/hmi/status`, using QoS 1 (broker confirms delivery) and `retain=true` (late subscribers get the current status immediately). Implemented with `libmosquitto` rather than the official Qt MQTT module, since the latter isn't packaged in standard Ubuntu repositories and would require building from source — `libmosquitto` is the official client of the same Mosquitto broker already used for testing, available directly via `apt`.
+
+## Known limitations (intentional, documented technical debt)
+
+- Broker IP/port and TCP command channel IP/port are currently hardcoded for this prototype phase.
+- Mosquitto broker configured with `allow_anonymous true` for this isolated test setup — not production-appropriate as-is.
+
 ## Build
+
+**Prerequisites:** Qt6 (Widgets, Network), `libmosquitto-dev`, `pkg-config`.
 
 ```bash
 cmake -S . -B build
@@ -40,6 +53,8 @@ tarsis-hmi-simulator/
 ├── src/
 │   ├── main.cpp
 │   ├── mainwindow.h
-│   └── mainwindow.cpp
+│   ├── mainwindow.cpp
+│   ├── mosquittomqttpublisher.h
+│   └── mosquittomqttpublisher.cpp
 └── cpp-fundamentals-refresher/   # C++ onboarding exercises (RAII, smart pointers)
 ```

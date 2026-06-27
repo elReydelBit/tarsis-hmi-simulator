@@ -9,9 +9,17 @@
 #include <QWidget>
 #include <QLabel>
 #include <QPushButton>
+
 #include <QUdpSocket> // Include the QUdpSocket header for UDP communication
 #include <QHostAddress> // Include the QHostAddress header for handling IP 
 #include <QTcpSocket> // Include the QTcpSocket header for TCP connection
+
+#include <QCloseEvent> // Full definition of QCloseEvent, needed to call event->accept()
+
+
+// Our own class: wraps a Mosquitto MQTT client used to announce
+// this HMI's online/offline status.
+#include "mosquittomqttpublisher.h" // Our own MQTT publisher class
 
 
 class MainWindow : public QWidget {
@@ -22,6 +30,11 @@ class MainWindow : public QWidget {
     public:
         //         Default argument       
         MainWindow(QWidget * parent = nullptr);
+
+    protected:
+        // Qt calls this automatically right before the window closes.
+        // We override it to publish "OFFLINE" before the program exits.
+        void closeEvent(QCloseEvent *event) override;
     
     private:
         QLabel *label=nullptr;
@@ -45,6 +58,9 @@ class MainWindow : public QWidget {
         //Member for TCP connection
         QTcpSocket *tcpSocket= nullptr; //Pointer to the TCP socket 
 
+
+        //Client for MQTT connection
+        MosquittoMqttPublisher mosqMqttPublisher;
 
 
     private slots:

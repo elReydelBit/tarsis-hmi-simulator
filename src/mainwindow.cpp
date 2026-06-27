@@ -3,7 +3,7 @@
 #include <QNetworkDatagram>// Include the QNetworkDatagram header for handling incoming UDP datagrams
 #include <QHBoxLayout> //Allow to desing better IU 
 
-MainWindow::MainWindow(QWidget *parent) : QWidget(parent){
+MainWindow::MainWindow(QWidget *parent) : QWidget(parent), mosqMqttPublisher("tarsis-hmi"){
 
     //Set the window title
     setWindowTitle("Tarsis HMI Simulator");
@@ -90,7 +90,8 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent){
     QObject::connect(this->tcpSocket, &QTcpSocket::readyRead, this, &MainWindow::receiveTcpData);
     QObject::connect(this->tcpSocket, &QTcpSocket::errorOccurred, this, &MainWindow:: onTcpError);
 
-
+    // Announce that the HMI is now running, once everything above is ready.
+    mosqMqttPublisher.publish("ONLINE");
 }
 
 void MainWindow::onReconnectButtonClicked(){
@@ -234,4 +235,12 @@ void MainWindow::onTcpError(QAbstractSocket :: SocketError socketError){
 
 }
 
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    // Announce that the HMI is shutting down, before the window
+    // actually closes and this object gets destroyed.
+    mosqMqttPublisher.publish("OFFLINE");
 
+    // Let Qt continue with its normal close behavior.
+    event->accept();
+}
