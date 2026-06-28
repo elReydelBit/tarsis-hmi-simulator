@@ -15,6 +15,7 @@
 #include <QTcpSocket> // Include the QTcpSocket header for TCP connection
 
 #include <QCloseEvent> // Full definition of QCloseEvent, needed to call event->accept()
+#include <QTimer> // Needed for the alarm banner's blinking behavior
 
 
 // Our own class: wraps a Mosquitto MQTT client used to announce
@@ -37,6 +38,36 @@ class MainWindow : public QWidget {
         void closeEvent(QCloseEvent *event) override;
     
     private:
+
+        //Title and subtitle, centered at the top of the window
+        QLabel *titleLabel=nullptr;
+        QLabel *subtitleLabel=nullptr;
+
+        //Connection status badges (TCP/UDP/MQTT)
+        QLabel *tcpBadge=nullptr;
+        QLabel *udpBadge=nullptr;
+        QLabel *mqttBadge=nullptr;
+
+        //Mission status banner (amber) - shown once RTL is actually sent
+        QLabel *missionBanner=nullptr;
+
+        //Critical alarm banner (red) - shown while battery is below
+        //threshold, cleared only when the operator presses RTL
+        QLabel *alarmBanner=nullptr;
+
+        //Drives the blinking of alarmBanner while the alarm is active
+        //and not yet acknowledged by the operator.
+        QTimer *alarmBlinkTimer=nullptr;
+        bool alarmBlinkOn=false;        // current blink phase
+        bool alarmAcknowledged=false;   // true once RTL is pressed, until battery recovers
+
+        // Polls mosqMqttPublisher.isConnected() once per second. Necesario
+        // porque ese valor lo cambia un hilo de mosquitto, AJENO al sistema
+        // de señales de Qt - sin este timer, nadie vuelve a preguntar nunca,
+        // y el badge se queda congelado en lo que vio una sola vez al arrancar.
+        QTimer *mqttPollTimer=nullptr;
+        
+
         QLabel *label=nullptr;
 
         //Label telemetry data
@@ -86,5 +117,11 @@ class MainWindow : public QWidget {
 
         //Slot function when the connect having problem
         void onTcpError(QAbstractSocket :: SocketError socketError);
+
+        //Slot function called by alarmBlinkTimer every 600ms
+        void toggleAlarmBlink();
+
+        //Slot function called by mqttPollTimer every 1000ms
+        void checkMqttStatus();
 
 };
