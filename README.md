@@ -48,12 +48,10 @@ Both sinks share the same timestamped pattern (`[date time] [logger] [level] mes
 
 ## Threading design note
 
-
 MQTT connection state is updated from mosquitto's native callbacks (`mosquitto_connect_callback_set` / `mosquitto_disconnect_callback_set`), which run on a background thread managed by `mosquitto_loop_start`/`stop` — not on Qt's main thread. Qt widgets are never touched directly from that callback thread; instead, the callback only writes to a `std::atomic<bool>` connection flag. A `QTimer` running on the Qt main thread polls that flag periodically and updates the MQTT status badge from there. This keeps every UI mutation on the thread that owns the UI, while `std::atomic<bool>` guarantees the flag itself is never read mid-write across threads.
 
 
 ## Alarm banner design note
-
 
 The alarm banner always reserves its layout space — its visibility never toggles, only its style (color, text) changes — so the rest of the HMI doesn't jump when an alarm appears or clears. A `QTimer` drives the blink while the alarm is active and unacknowledged. Pressing RTL transitions the banner into an acknowledged/muted state, distinct from a fully cleared alarm, so the operator's action is visually distinguishable from the system simply recovering on its own.
 
