@@ -4,19 +4,22 @@ Qt6/C++ HMI simulator for UAV telemetry — portfolio project built in preparati
 
 ## Status
 
-🚧 **Work in progress**
+✅ **Core HMI feature-complete** — DDS conceptual study and PECAL documentation review remain.
 
-| Module | Status |
-|--------|--------|
-| Qt6 + CMake skeleton | ✅ Done |
-| `MainWindow` class (Q_OBJECT, signals & slots) | ✅ Done |
-| C++ modern fundamentals (RAII, smart pointers) | ✅ Done — see `cpp-fundamentals-refresher/` |
-| UDP telemetry reception & parsing | ✅ Done |
-| TCP critical command channel (RTL) | ✅ Done |
-| MQTT status publishing (ONLINE/OFFLINE) | ✅ Done |
-| Logging (dual-sink, battery alarm threshold) | ✅ Done |
-| DDS conceptual study | ⏳ Planned |
-| PECAL documentation review | ⏳ Planned |
+| Module                                                         | Status                                     |
+| ---------------------------------------------------------------| ------------------------------------------ |
+| Qt6 + CMake skeleton                                            | ✅ Done                                     |
+| `MainWindow` class (Q_OBJECT, signals & slots)                  | ✅ Done                                     |
+| C++ modern fundamentals (RAII, smart pointers)                  | ✅ Done — see `cpp-fundamentals-refresher/` |
+| UDP telemetry reception & parsing                                | ✅ Done                                     |
+| TCP critical command channel (RTL)                               | ✅ Done                                     |
+| MQTT status publishing (ONLINE/OFFLINE)                          | ✅ Done                                     |
+| Logging (dual-sink, battery alarm threshold)                     | ✅ Done                                     |
+| Full HMI UI (telemetry cards, status badges, alarm/mission banners, RTL/Reconnect) | ✅ Done |
+| MQTT background-thread connection monitoring                    | ✅ Done                                     |
+| Alarm banner (blink, acknowledge/mute)                            | ✅ Done                                     |
+| DDS conceptual study                                              | ⏳ Planned                                  |
+| PECAL documentation review                                       | ⏳ Planned                                  |
 
 ## Tech stack
 
@@ -41,6 +44,20 @@ The HMI uses a single `spdlog` logger registered as the process-wide default (se
 Battery readings below **10%** are logged as `warning`, on every single reading below threshold — not just on the first crossing — so the alarm log can reconstruct exactly how long the aircraft was in a critical state before the operator acted. When the operator presses RTL, a separate `critical`-level line is written once, recording that a human decision was made, distinct from the repeated automated warnings above it.
 
 Both sinks share the same timestamped pattern (`[date time] [logger] [level] message`) and flush to disk via `spdlog::shutdown()`, called after the Qt event loop (`app.exec()`) returns — not before, since the logger must stay alive for the entire lifetime of the application.
+
+
+## Threading design note
+
+[#threading-design-note](#threading-design-note)
+
+MQTT connection state is updated from mosquitto's native callbacks (`mosquitto_connect_callback_set` / `mosquitto_disconnect_callback_set`), which run on a background thread managed by `mosquitto_loop_start`/`stop` — not on Qt's main thread. Qt widgets are never touched directly from that callback thread; instead, the callback only writes to a `std::atomic<bool>` connection flag. A `QTimer` running on the Qt main thread polls that flag periodically and updates the MQTT status badge from there. This keeps every UI mutation on the thread that owns the UI, while `std::atomic<bool>` guarantees the flag itself is never read mid-write across threads.
+
+
+## Alarm banner design note
+
+[#alarm-banner-design-note](#alarm-banner-design-note)
+
+The alarm banner always reserves its layout space — its visibility never toggles, only its style (color, text) changes — so the rest of the HMI doesn't jump when an alarm appears or clears. A `QTimer` drives the blink while the alarm is active and unacknowledged. Pressing RTL transitions the banner into an acknowledged/muted state, distinct from a fully cleared alarm, so the operator's action is visually distinguishable from the system simply recovering on its own.
 
 ## Known limitations (intentional, documented technical debt)
 
